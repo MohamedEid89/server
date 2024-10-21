@@ -10,7 +10,6 @@ const categorySchema = new mongoose.Schema(
             minlength: [3, 'Too short category name'],
             maxlength: [32, 'Too long category name'],
         },
-        // A and B => shoping.com/a-and-b
         slug: {
             type: String,
             lowercase: true,
@@ -21,7 +20,8 @@ const categorySchema = new mongoose.Schema(
 );
 
 // 2- Create model
-const CategoryModel = mongoose.model('Category', categorySchema);
+module.exports = mongoose.model('Category', categorySchema);
 
-module.exports = CategoryModel;
+// const CategoryModel = mongoose.model('Category', categorySchema);
+// module.exports = CategoryModel;
 
