@@ -5,7 +5,7 @@ const subCategorySchema = new mongoose.Schema(
         name: {
             type: String,
             trim: true, // spaces delete
-            unique: [true, 'Subcategory must be unique'],
+            unique: [true, 'Subcategory exists'],
             minlenght: [2, 'To short Subcategory name'],
             maxlenght: [32, 'To long Subcategory name'],
         },
@@ -23,7 +23,6 @@ const subCategorySchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-// 2- Create model
 module.exports = mongoose.model('SubCategory', subCategorySchema);
 
 

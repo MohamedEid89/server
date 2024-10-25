@@ -7,6 +7,8 @@ dotenv.config();
 const dbConnection = require('./config/database');
 const categoryRoute = require('./routes/categoryRoute');
 const subCategoryRoute = require('./routes/subCategoryRoute');
+const productRoute = require('./routes/productRoute');
+const brandRoute = require('./routes/brandRoute');
 const ApiError = require('./utils/apiError')
 const globalError = require('./middlewares/errorMiddleware')
 
@@ -24,13 +26,15 @@ if (process.env.NODE_ENV === 'development') {
     console.log(`mode: ${process.env.NODE_ENV}`);
 }
 
-// Mount Routes
+// Mount Home Routes
 app.get('/', (req, res) => {
-    res.send('Hi');
+    res.send('Hi Server Working...');
 });
 // Mount Routes   
 app.use('/api/v1/categories', categoryRoute);
 app.use('/api/v1/subcategories', subCategoryRoute);
+app.use('/api/v1/brands', brandRoute);
+app.use('/api/v1/products', productRoute);
 
 app.all('*', (req, res, next) => {
     // Create error and send it to error handling middleware
