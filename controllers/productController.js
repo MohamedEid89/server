@@ -2,69 +2,21 @@ const slugify = require("slugify");
 const expressAsyncHandler = require("express-async-handler");
 const Product = require("../models/productModel");
 const ApiError = require("../utils/apiError");
+const ApiFeatures = require("../utils/apiFeatures");
+const factory = require("./handlersFactroy");
 
 // @dec Get products
 // @route GET /api/v1/products 
 // @access Public
 exports.getProducts = expressAsyncHandler(async (req, res, next) => {
 
-    // Filtration products
-    const queryStringObj = { ...req.query };
-    const excludesFields = ['page', 'sort', 'limit', 'fields'];
-    excludesFields.forEach((field) => delete queryStringObj[field]);
-
-    // console.log(queryStringObj);
-
-    //  Pagination products
-    const page = req.query.page * 1 || 1;
-    const limit = req.query.limit * 1 || 10;
-    const skip = (page - 1) * limit;
-
-    let queryStr = JSON.stringify(queryStringObj); // replace to string 
-
-    // replace to string can add '$' to gte/gt/lt
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-
-    // console.log(JSON.parse(queryStr));  
-    // Build query
-    let mongooseQuery = Product.find(JSON.parse(queryStr)).skip(skip).limit(limit).populate({ path: 'category', select: 'name -_id' });
-
-
-    // sorting products
-    if (req.query.sort) {
-        // price, - sold => [ price, -sold ] => [ price -sold ]
-        const sortBy = req.query.sort.split(',').join(' ');
-        // console.log(sortBy);
-        mongooseQuery = mongooseQuery.sort(sortBy);
-    } else {
-        mongooseQuery = mongooseQuery.sort('-createdAt');
-    }
-    // Fields Limitation 
-    if (req.query.fields) {
-        // products?fields=price,sold,ratingsAverage,colors
-        const fields = req.query.fields.split(',').join(' ');
-        mongooseQuery = mongooseQuery.select(fields);
-
-    } else {
-        mongooseQuery = mongooseQuery.select('-__v');
-    }
-
-    // Search products
-    if (req.query.keyword) {
-        const query = {};
-        query.$or = [
-            { title: { $regex: req.query.keyword, $options: 'i' } },
-            { description: { $regex: req.query.keyword, $options: 'i' } },
-        ];
-        mongooseQuery = Product.find(query);
-
-    }
-
+    const documentsCount = await Product.countDocuments()
+    const apiFeatures = new ApiFeatures(Product.find(), req.query).paginate(documentsCount).filter().search().limitFields().sort();
     // Execute query
+    const { mongooseQuery, paginationDocs } = apiFeatures;
     const products = await mongooseQuery;
 
-    res.status(200).json({ result: products.length, page, data: products });
-
+    res.status(200).json({ result: products.length, paginationDocs, data: products });
 });
 
 // @dec Get specific product by id
@@ -92,26 +44,9 @@ exports.createProduct = expressAsyncHandler(async (req, res) => {
 // @dec Update specific product 
 // @route POST /api/v1/products/:id 
 // @access Private
-exports.updateProduct = expressAsyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    if (req.body.title) {
-        req.body.slug = slugify(req.body.title);
-    }
-    const product = await Product.findByIdAndUpdate({ _id: id }, req.body, { new: true });
-    if (!product) {
-        res.status(404).json({ msg: `No product found for this id ${id}` });
-    }
-    res.status(200).json({ data: product });
-})
+exports.updateProduct = factory.updateOne(Product);
 
 // @dec Delete specific product 
 // @route POST /api/v1/products/:id
 // @access Private
-exports.deleteProduct = expressAsyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    const product = await Product.findByIdAndDelete(id);
-    if (!product) {
-        res.status(404).json({ msg: `No product found for this id ${id}` });
-    }
-    res.status(204).send();
-})
+exports.deleteProduct = factory.deleteOne(Product);
