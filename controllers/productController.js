@@ -2,7 +2,6 @@ const slugify = require("slugify");
 const expressAsyncHandler = require("express-async-handler");
 const Product = require("../models/productModel");
 const ApiError = require("../utils/apiError");
-const { $where } = require("../models/categoryModel");
 
 // @dec Get products
 // @route GET /api/v1/products 
@@ -23,17 +22,15 @@ exports.getProducts = expressAsyncHandler(async (req, res, next) => {
 
     let queryStr = JSON.stringify(queryStringObj); // replace to string 
 
-    // replace to string can add '$'
+    // replace to string can add '$' to gte/gt/lt
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
 
-    // console.log(JSON.parse(queryStr)); // replace to object
-
+    // console.log(JSON.parse(queryStr));  
     // Build query
     let mongooseQuery = Product.find(JSON.parse(queryStr)).skip(skip).limit(limit).populate({ path: 'category', select: 'name -_id' });
 
 
     // sorting products
-
     if (req.query.sort) {
         // price, - sold => [ price, -sold ] => [ price -sold ]
         const sortBy = req.query.sort.split(',').join(' ');
@@ -53,19 +50,15 @@ exports.getProducts = expressAsyncHandler(async (req, res, next) => {
     }
 
     // Search products
-    // if (req.query.keyword) {
-    //     const query = {};
-    //     query.$or = [
-    //         { title: { $regex: req.query.keyword, $options: 'i' } },
-    //         // { description: { $regex: req.query.keyword, $options: 'i' } },
-    //         // { brand: { $regex: req.query.keyword, $options: 'i' } },
-    //         // { color: { $regex: req.query.keyword, $options: 'i' } },
-    //     ];
-    //     mongooseQuery = mongooseQuery.find(query);
+    if (req.query.keyword) {
+        const query = {};
+        query.$or = [
+            { title: { $regex: req.query.keyword, $options: 'i' } },
+            { description: { $regex: req.query.keyword, $options: 'i' } },
+        ];
+        mongooseQuery = Product.find(query);
 
-    // }
-
-
+    }
 
     // Execute query
     const products = await mongooseQuery;
