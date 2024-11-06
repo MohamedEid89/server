@@ -39,15 +39,16 @@ class ApiFeatures {
         return this;
     }
 
-    search(model) {
+    search(modelName) {
         if (this.queryStr.keyword) {
             const query = {};
-            if (model === 'Products') {
+            if (modelName === 'Product') {
                 query.$or = [
                     { title: { $regex: this.queryStr.keyword, $options: 'i' } },
                     { description: { $regex: this.queryStr.keyword, $options: 'i' } },
                 ];
-            } else {
+            }
+            else {
                 query.$or = [
                     { name: { $regex: this.queryStr.keyword, $options: 'i' } },
                 ];
