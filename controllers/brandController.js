@@ -1,5 +1,23 @@
 const Brand = require("../models/brandModel");
 const factory = require("./handlersFactroy");
+const { v4: uuidv4 } = require("uuid");
+const sharp = require("sharp");
+const { uploadSingelLImage } = require("../middlewares/uploadMiddleware");
+
+// image upload
+exports.uploadBrandImg = uploadSingelLImage('image');
+//  image processing
+exports.resizeImage = (req, res, next) => {
+    const filename = `brand-${uuidv4()}-${Date.now()}.jpeg`;
+    sharp(req.file.buffer)
+        .resize(600, 600)
+        .toFormat("jpeg")
+        .jpeg({ quality: 98 })
+        .toFile(`uploads/brands/${filename}`);
+    // DB save image 
+    req.body.image = filename;
+    next();
+};
 
 // @dec Get brands
 // @route GET /api/v1/brands 

@@ -83,4 +83,21 @@ productSchema.pre(/^find/, function (next) {
     });
     next();
 });
+
+
+const setImagUrl = (doc) => {
+    // set baseURL + image
+    if (doc.featuredImage) {
+        const imageUrl = `${process.env.BASE_URL}/products/${doc.featuredImage}`;
+        doc.featuredImage = imageUrl;
+    }
+}
+productSchema.post('init', (doc) => {
+    setImagUrl(doc);
+})
+productSchema.post('save', (doc) => {
+    setImagUrl(doc);
+})
+
+
 module.exports = mongoose.model('Product', productSchema);

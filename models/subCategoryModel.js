@@ -18,11 +18,25 @@ const subCategorySchema = new mongoose.Schema(
             type: mongoose.Schema.ObjectId,
             ref: 'Category',
             required: [true, 'Subcategory must be belong to parent category'],
-        }
+        },
+        image: String,  // image is a string
     },
     { timestamps: true }
 );
 
+const setImagUrl = (doc) => {
+    // set baseURL + image
+    if (doc.image) {
+        const imageUrl = `${process.env.BASE_URL}/subcategories/${doc.image}`;
+        doc.image = imageUrl;
+    }
+}
+subCategorySchema.post('init', (doc) => {
+    setImagUrl(doc);
+})
+subCategorySchema.post('save', (doc) => {
+    setImagUrl(doc);
+})
 module.exports = mongoose.model('SubCategory', subCategorySchema);
 
 
