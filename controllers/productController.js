@@ -1,24 +1,56 @@
-const Product = require("../models/productModel");
-const factory = require("./handlersFactroy");
+
 const { v4: uuidv4 } = require("uuid");
 const sharp = require("sharp");
-const { uploadSingelLImage } = require("../middlewares/uploadMiddleware");
+const expressAsyncHandler = require("express-async-handler");
+
+const { uploadMultiImages } = require("../middlewares/uploadMiddleware");
+const Product = require("../models/productModel");
+const factory = require("./handlersFactroy");
 
 
 
-exports.uploadProductImg = uploadSingelLImage('featuredImage');
-//  image processing
-// exports.resizeImage = (req, res, next) => {
-//     const filename = `product-${uuidv4()}-${Date.now()}.jpeg`;
-//     sharp(req.file.buffer)
-//         .resize(600, 600)
-//         .toFormat("jpeg")
-//         .jpeg({ quality: 98 })
-//         .toFile(`uploads/products/${filename}`);
-//     // DB save image 
-//     req.body.featuredImage = filename;
-//     next();
-// };
+
+
+// Upload multiple images for a product
+exports.uploadProductImages = uploadMultiImages([
+    { name: "featuredImage", maxCount: 1 },
+    { name: "images", maxCount: 5 }
+]);
+
+exports.resizeImages = expressAsyncHandler(async (req, res, next) => {
+    // featuredImage processing
+    if (req.files.featuredImage) {
+        const productFeaturedImage = `product-${uuidv4()}-${Date.now()}-featured.jpeg`;
+        await sharp(req.files.featuredImage[0].buffer)
+            .resize(2000, 1333)
+            .toFormat("jpeg")
+            .jpeg({ quality: 98 })
+            .toFile(`uploads/products/${productFeaturedImage}`);
+        // DB save image 
+        req.body.featuredImage = productFeaturedImage;
+    }
+
+    if (req.files.images) {
+        req.body.images = [];
+
+        await Promise.all(
+            req.files.images.map(async (img, index) => {
+                const imageName = `product-${uuidv4()}-${Date.now()}-${index + 1}.jpeg`;
+                await sharp(img.buffer)
+                    .resize(2000, 1333)
+                    .toFormat("jpeg")
+                    .jpeg({ quality: 98 })
+                    .toFile(`uploads/products/${imageName}`);
+                // DB save image 
+                req.body.images.push(imageName);
+            })
+        );
+        next();
+
+    }
+
+});
+
 
 
 // @dec Get products

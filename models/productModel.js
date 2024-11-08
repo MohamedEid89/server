@@ -91,6 +91,15 @@ const setImagUrl = (doc) => {
         const imageUrl = `${process.env.BASE_URL}/products/${doc.featuredImage}`;
         doc.featuredImage = imageUrl;
     }
+    if (doc.images) {
+        const imagesList = [];
+        doc.images.forEach((image) => {
+            const imageUrl = `${process.env.BASE_URL}/products/${image}`;
+            imagesList.push(imageUrl);
+        });
+        doc.images = imagesList;
+
+    }
 }
 productSchema.post('init', (doc) => {
     setImagUrl(doc);
