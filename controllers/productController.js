@@ -9,8 +9,6 @@ const factory = require("./handlersFactroy");
 
 
 
-
-
 // Upload multiple images for a product
 exports.uploadProductImages = uploadMultiImages([
     { name: "featuredImage", maxCount: 1 },
